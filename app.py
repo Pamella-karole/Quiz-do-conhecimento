@@ -180,13 +180,11 @@ elif st.session_state.pagina == "professor":
     st.header("⚙️ Painel do Instrutor (Banco de Dados Online)")
     senha = st.text_input("Senha do Professor", type="password")
     
-# --- VALIDAÇÃO DE SENHA INTELIGENTE ---
-        # Busca "SENHA_PROFESSOR" no cofre do Streamlit. Se não achar (local), usa "senha_teste_local"
     senha_mestra = st.secrets.get("SENHA_PROFESSOR", "senha_teste_local")
     if senha == senha_mestra:
-            st.write("---")
-            opcao_prof = st.radio("Selecione uma ação:", ["📋 Configurar Nova Prova", "➕ Cadastrar Nova Questão"], horizontal=True)
-            st.write("---")
+
+        opcao_prof = st.radio("Selecione uma ação:", ["📋 Configurar Nova Prova", "➕ Cadastrar Nova Questão"], horizontal=True)
+        st.write("---")
 
         if opcao_prof == "📋 Configurar Nova Prova":
             if df is not None and not df.empty:
