@@ -174,19 +174,48 @@ if st.session_state.pagina == "home":
 # 2. ÁREA DO PROFESSOR (SUPABASE)
 elif st.session_state.pagina == "professor":
     if st.button("⬅️ Voltar ao Início"):
+        # Reseta o login ao voltar para a home por segurança
+        st.session_state.prof_autenticado = False
         st.session_state.pagina = "home"
         st.rerun()
         
     st.header("⚙️ Painel do Instrutor (Banco de Dados Online)")
-    senha = st.text_input("Senha do Professor", type="password")
     
-    senha_mestra = st.secrets.get("SENHA_PROFESSOR", "senha_teste_local")
-    if senha == senha_mestra:
-
-        opcao_prof = st.radio("Selecione uma ação:", ["📋 Configurar Nova Prova", "➕ Cadastrar Nova Questão"], horizontal=True)
+    # Cria a chave de memória para o login se ela não existir
+    if "prof_autenticado" not in st.session_state:
+        st.session_state.prof_autenticado = False
+        
+    # --- PASSO 1: VERIFICA SE ESTÁ LOGADO ---
+    if not st.session_state.prof_autenticado:
+        # Se NÃO está logado, mostra a caixinha de senha normal
+        senha = st.text_input("Digite a Senha de Acesso", type="password")
+        senha_mestra = st.secrets.get("SENHA_PROFESSOR", "senha_teste_local")
+        
+        if senha == senha_mestra and senha != "":
+            st.session_state.prof_autenticado = True
+            st.rerun() # Some com o campo de senha imediatamente
+            
+    # --- PASSO 2: SE ESTIVER LOGADO, MOSTRA O AMBIENTE ---
+    else:
+        # Botão elegante para deslogar e esconder os dados se alguém chegar perto
+        if st.button("🔒 Trancar Painel (Sair)"):
+            st.session_state.prof_autenticado = False
+            st.rerun()
+            
         st.write("---")
+        
+        # O TRUQUE: index=None faz o rádio começar totalmente limpo!
+        opcao_prof = st.radio("Selecione a ação desejada:", 
+                              ["📋 Configurar Nova Prova", "➕ Cadastrar Nova Questão"], 
+                              horizontal=True, 
+                              index=None)
+        st.write("---")
+        
+        # Mensagem amigável caso nenhuma opção tenha sido clicada ainda
+        if opcao_prof is None:
+            st.info("💡 Por favor, selecione uma das opções acima para expandir as ferramentas do painel.")
 
-        if opcao_prof == "📋 Configurar Nova Prova":
+        elif opcao_prof == "📋 Configurar Nova Prova":
             if df is not None and not df.empty:
                 col1, col2 = st.columns(2)
                 with col1:
@@ -236,35 +265,76 @@ elif st.session_state.pagina == "professor":
         elif opcao_prof == "➕ Cadastrar Nova Questão":
             st.subheader("Formulário de Cadastro de Questão (Direto para o Supabase)")
             
-            # --- SUPER MELHORIA: FORMULÁRIO COM RESET COMPLETO AUTOMÁTICO ---
-            with st.form(key="form_cadastro_questao", clear_on_submit=True):
+            with st.form(key="form_cadastro_questao", clear_on_submit=False):
                 c1, c2, c3 = st.columns(3)
+                
                 with c1:
-                    nova_disc = st.text_input("Disciplina (Ex: Marketing)").strip()
+                    nova_disc = st.text_input("Disciplina (Ex: Marketing)", key="q_disc").strip()
                 with c2:
-                    novo_assu = st.text_input("Assunto (Ex: Mix de Marketing)").strip()
+                    novo_assu = st.text_input("Assunto (Ex: Mix de Marketing)", key="q_assu").strip()
                 with c3:
-                    novo_niv = st.selectbox("Nível de Dificuldade", ["fácil", "médio", "difícil"])
+                    novo_niv = st.selectbox("Nível de Dificuldade", ["fácil", "médio", "difícil"], key="q_niv")
                     
-                novo_enunciado = st.text_area("Enunciado da Questão")
+                novo_enunciado = st.text_area("Enunciado da Questão", key="q_enun")
                 
                 st.write("**Alternativas de Resposta:**")
-                alt_a = st.text_input("Alternativa A")
-                alt_b = st.text_input("Alternativa B")
-                alt_c = st.text_input("Alternativa C")
-                alt_d = st.text_input("Alternativa D")
+                alt_a = st.text_input("Alternativa A", key="q_a")
+                alt_b = st.text_input("Alternativa B", key="q_b")
+                alt_c = st.text_input("Alternativa C", key="q_c")
+                alt_d = st.text_input("Alternativa D", key="q_d")
                 
                 c4, c5 = st.columns(2)
                 with c4:
                     gabarito_col = st.selectbox("Qual é a alternativa correta?",
                                                 options=["alt_a", "alt_b", "alt_c", "alt_d"],
-                                                format_func=lambda x: f"Alternativa {x.split('_')[1].upper()}")
+                                                format_func=lambda x: f"Alternativa {x.split('_')[1].upper()}",
+                                                key="q_gab")
                 with c5:
-                    nova_img = st.text_input("Nome da Imagem de referência (Opcional)").strip()
+                    nova_img = st.text_input("Nome da Imagem de referência (Opcional)", key="q_img").strip()
                     
-                nova_explicacao = st.text_area("Explicação/Feedback da Questão (Opcional)")
+                nova_explicacao = st.text_area("Explicação/Feedback da Questão (Opcional)", key="q_exp")
 
                 st.write("---")
+
+                botao_salvar = st.form_submit_button("💾 Gravar Questão na Nuvem")
+                
+                if botao_salvar:
+                    campos_faltantes = []
+                    if not nova_disc: campos_faltantes.append("Disciplina")
+                    if not novo_assu: campos_faltantes.append("Assunto")
+                    if not novo_enunciado: campos_faltantes.append("Enunciado")
+                    if not alt_a: campos_faltantes.append("Alternativa A")
+                    if not alt_b: campos_faltantes.append("Alternativa B")
+                    if not alt_c: campos_faltantes.append("Alternativa C")
+                    if not alt_d: campos_faltantes.append("Alternativa D")
+                    
+                    if len(campos_faltantes) == 0:
+                        nova_questao = {
+                            'disciplina': nova_disc, 'assunto': novo_assu, 'nível': novo_niv,
+                            'enunciado': novo_enunciado, 'alt_a': alt_a, 'alt_b': alt_b, 
+                            'alt_c': alt_c, 'alt_d': alt_d, 'coluna_correta': gabarito_col, 
+                            'explicacao': nova_explicacao, 'img_ref': nova_img
+                        }
+                        
+                        sucesso = supabase_salvar_questao(nova_questao)
+                        
+                        if sucesso:
+                            st.success("🎉 Questão gravada com sucesso direto no banco de dados na nuvem!")
+                            import time
+                            time.sleep(1.5)
+                            
+                            chaves_form = ["q_disc", "q_assu", "q_niv", "q_enun", "q_a", "q_b", "q_c", "q_d", "q_gab", "q_img", "q_exp"]
+                            for chave in chaves_form:
+                                if chave in st.session_state:
+                                    del st.session_state[chave]
+                                    
+                            st.rerun() 
+                        else:
+                            st.error("Erro ao salvar. Verifique se o banco de dados está configurado corretamente.")
+                    else:
+                        campos_str = ", ".join(campos_faltantes)
+                        st.error(f"❌ Opa! Faltou preencher: **{campos_str}**.")
+
 
                 # Botão de submissão do formulário
                 botao_salvar = st.form_submit_button("💾 Gravar Questão na Nuvem")
