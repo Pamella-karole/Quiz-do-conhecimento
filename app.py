@@ -258,23 +258,30 @@ elif st.session_state.pagina == "professor":
                 
             nova_explicacao = st.text_area("Justificativa Pedagógica")
             
+# -- GRAVAR QUESTÃO E EXIBIR MENSAGE: ERRO OU SUCESSO
+
             if st.button("💾 Gravar Questão na Nuvem"):
-                if nova_disc and novo_assu and novo_enunciado and alt_a and alt_b and alt_c and alt_d and nova_explicacao:
-                    
+                if nova_disc and nova_assu and novo_enunciado and alt_a and alt_b and alt_c and alt_d and nova_explicacao:
+        
                     nova_questao = {
-                        'disciplina': nova_disc, 'assunto': novo_assu, 'nível': novo_niv,
+                        'disciplina': nova_disc, 'assunto': nova_assu, 'nível': nova_niv,
                         'enunciado': novo_enunciado, 'alt_a': alt_a, 'alt_b': alt_b, 'alt_c': alt_c, 'alt_d': alt_d,
                         'coluna_correta': gabarito_col, 'explicacao': nova_explicacao, 'img_ref': nova_img
                     }
-                    
+        
+        # --- ATENÇÃO AQUI: EMPURRE ESSAS LINHAS PARA A DIREITA ---
                     sucesso = supabase_salvar_questao(nova_questao)
                     if sucesso:
                         st.success("🎉 Questão gravada com sucesso direto no banco de dados na nuvem!")
+                        import time
+                        time.sleep(1) # Dá 1 segundinho para o professor ver o verde antes de resetar!
                         st.rerun()
-                    else:
-                        st.error("Erro ao salvar. Verifique se o banco de dados está configurado corretamente.")
+                else:
+                    st.error("Erro ao salvar. Verifique se o banco de dados está configurado corretamente.")
+            
                 else:
                     st.error("❌ Preencha todos os campos obrigatórios.")
+
 
 # 3. ÁREA DO ALUNO (SUPABASE)
 elif st.session_state.pagina == "aluno":
