@@ -276,8 +276,8 @@ elif st.session_state.pagina == "professor":
                         import time
                         time.sleep(1) # Dá 1 segundinho para o professor ver o verde antes de resetar!
                         st.rerun()
-                else:
-                    st.error("Erro ao salvar. Verifique se o banco de dados está configurado corretamente.")
+                    else:
+                        st.error("Erro ao salvar. Verifique se o banco de dados está configurado corretamente.")
             
                 else:
                     st.error("❌ Preencha todos os campos obrigatórios.")
