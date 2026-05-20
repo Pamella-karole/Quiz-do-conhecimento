@@ -228,107 +228,113 @@ elif st.session_state.pagina == "professor":
                             st.success(f"✅ Prova '{cod_prova}' ativada com sucesso no Banco de Dados Online!")
                         else:
                             st.error("Erro ao registrar prova na nuvem. Verifique as configurações.")
-                    else: st.error("Insira um código válido.")
+                    else: 
+                        st.error("Insira um código válido.")
             else:
                 st.warning("O banco de dados na nuvem está vazio. Cadastre questões primeiro!")
 
         elif opcao_prof == "➕ Cadastrar Nova Questão":
-    st.subheader("Formulário de Cadastro de Questão (Direto para o Supabase)")
-    
-    # Criando os campos organizados
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        nova_disc = st.text_input("Disciplina (Ex: Marketing)").strip()
-    with c2:
-        novo_assu = st.text_input("Assunto (Ex: Mix de Marketing)").strip()
-    with c3:
-        novo_niv = st.selectbox("Nível de Dificuldade", ["fácil", "médio", "difícil"])
-        
-    novo_enunciado = st.text_area("Enunciado da Questão")
-    
-    st.write("**Alternativas de Resposta:**")
-    alt_a = st.text_input("Alternativa A")
-    alt_b = st.text_input("Alternativa B")
-    alt_c = st.text_input("Alternativa C")
-    alt_d = st.text_input("Alternativa D")
-    
-    c4, c5 = st.columns(2)
-    with c4:
-        gabarito_col = st.selectbox("Qual é a alternativa correta?",
-                                    options=["alt_a", "alt_b", "alt_c", "alt_d"],
-                                    format_func=lambda x: f"Alternativa {x.split('_')[1].upper()}")
-    with c5:
-        nova_img = st.text_input("Nome da Imagem de referência (Opcional)").strip()
-        
-    # --- ADICIONADO: Campo de explicação que estava faltando no formulário! ---
-    nova_explicacao = st.text_area("Explicação/Feedback da Questão (Opcional)")
-
-    st.write("---")
-
-    # --- BOTÃO DE SALVAR PERFEITAMENTE ALINHADO ---
-    if st.button("💾 Gravar Questão na Nuvem"):
-        # Validando se os campos essenciais foram preenchidos (retirada a obrigação da imagem)
-        if nova_disc and novo_assu and novo_enunciado and alt_a and alt_b and alt_c and alt_d:
+            st.subheader("Formulário de Cadastro de Questão (Direto para o Supabase)")
             
-            nova_questao = {
-                'disciplina': nova_disc, 
-                'assunto': novo_assu, 
-                'nível': novo_niv,
-                'enunciado': novo_enunciado, 
-                'alt_a': alt_a, 
-                'alt_b': alt_b, 
-                'alt_c': alt_c, 
-                'alt_d': alt_d,
-                'coluna_correta': gabarito_col, 
-                'explicacao': nova_explicacao, 
-                'img_ref': nova_img
-            }
+            # Criando os campos organizados dentro do bloco correto
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                nova_disc = st.text_input("Disciplina (Ex: Marketing)").strip()
+            with c2:
+                novo_assu = st.text_input("Assunto (Ex: Mix de Marketing)").strip()
+            with c3:
+                novo_niv = st.selectbox("Nível de Dificuldade", ["fácil", "médio", "difícil"])
+                
+            novo_enunciado = st.text_area("Enunciado da Questão")
             
-            sucesso = supabase_salvar_questao(nova_questao)
-            if sucesso:
-                st.success("🎉 Questão gravada com sucesso direto no banco de dados na nuvem!")
-                import time
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.error("Erro ao salvar. Verifique se o banco de dados está configurado corretamente.")
-        else:
-            st.error("❌ Preencha todos os campos obrigatórios (Disciplina, Assunto, Enunciado e as 4 Alternativas).")
+            st.write("**Alternativas de Resposta:**")
+            alt_a = st.text_input("Alternativa A")
+            alt_b = st.text_input("Alternativa B")
+            alt_c = st.text_input("Alternativa C")
+            alt_d = st.text_input("Alternativa D")
+            
+            c4, c5 = st.columns(2)
+            with c4:
+                gabarito_col = st.selectbox("Qual é a alternativa correta?",
+                                            options=["alt_a", "alt_b", "alt_c", "alt_d"],
+                                            format_func=lambda x: f"Alternativa {x.split('_')[1].upper()}")
+            with c5:
+                nova_img = st.text_input("Nome da Imagem de referência (Opcional)").strip()
+                
+            nova_explicacao = st.text_area("Explicação/Feedback da Questão (Opcional)")
 
+            st.write("---")
+
+            # Botão de salvar totalmente alinhado dentro do menu do professor
+            if st.button("💾 Gravar Questão na Nuvem"):
+                if nova_disc and novo_assu and novo_enunciado and alt_a and alt_b and alt_c and alt_d:
+                    
+                    nova_questao = {
+                        'disciplina': nova_disc, 
+                        'assunto': novo_assu, 
+                        'nível': novo_niv,
+                        'enunciado': novo_enunciado, 
+                        'alt_a': alt_a, 
+                        'alt_b': alt_b, 
+                        'alt_c': alt_c, 
+                        'alt_d': alt_d,
+                        'coluna_correta': gabarito_col, 
+                        'explicacao': nova_explicacao, 
+                        'img_ref': nova_img
+                    }
+                    
+                    sucesso = supabase_salvar_questao(nova_questao)
+                    if sucesso:
+                        st.success("🎉 Questão gravada com sucesso direto no banco de dados na nuvem!")
+                        import time
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("Erro ao salvar. Verifique se o banco de dados está configurado corretamente.")
+                else:
+                    st.error("❌ Preencha todos os campos obrigatórios (Disciplina, Assunto, Enunciado e as 4 Alternativas).")
 
 # 3. ÁREA DO ALUNO (SUPABASE)
 elif st.session_state.pagina == "aluno":
     if not st.session_state.prova_gerada:
-        if st.button("⬅️ Voltar"): st.session_state.pagina = "home"; st.rerun()
+        if st.button("⬅️ Voltar"): 
+            st.session_state.pagina = "home"
+            st.rerun()
         st.header("📝 Login Aluno")
-        n, c = st.text_input("Nome Completo"), st.text_input("Código da Prova").upper()
+        n = st.text_input("Nome Completo")
+        c = st.text_input("Código da Prova").upper()
         
         if st.button("Iniciar Prova"):
-            provas_nuvem = supabase_buscar_provas()
-            cfg = next((p for p in provas_nuvem if p['codigo_prova'] == c), None)
-            
-            if cfg:
-                lista_final = []
-                mix_cfg = {'fácil': cfg['qtd_facil'], 'médio': cfg['qtd_medio'], 'difícil': cfg['qtd_dificil']}
+            if n and c:  # Melhoria: impede de avançar se campos estiverem em branco
+                provas_nuvem = supabase_buscar_provas()
+                cfg = next((p for p in provas_nuvem if p['codigo_prova'] == c), None)
                 
-                for nivel, qtd in mix_cfg.items():
-                    if qtd > 0:
-                        if cfg['assunto'] == "TODOS":
-                            sub_df = df[(df['disciplina']==cfg['disciplina']) & (df['nível']==nivel)]
-                        else:
-                            sub_df = df[(df['disciplina']==cfg['disciplina']) & (df['assunto']==cfg['assunto']) & (df['nível']==nivel)]
-                        
-                        if not sub_df.empty:
-                            n_sorteio = min(len(sub_df), qtd)
-                            lista_final.append(sub_df.sample(n=n_sorteio))
-                
-                if lista_final:
-                    st.session_state.questoes = pd.concat(lista_final).sample(frac=1).reset_index(drop=True)
-                    st.session_state.prova_gerada = True
-                    st.session_state.nome, st.session_state.cod = n, c
-                    st.rerun()
-                else: st.error("Não há questões suficientes cadastradas para esta prova.")
-            else: st.error("Código de prova não encontrado na nuvem.")
+                if cfg:
+                    lista_final = []
+                    mix_cfg = {'fácil': cfg['qtd_facil'], 'médio': cfg['qtd_medio'], 'difícil': cfg['qtd_dificil']}
+                    
+                    for nivel, qtd in mix_cfg.items():
+                        if qtd > 0:
+                            if cfg['assunto'] == "TODOS":
+                                sub_df = df[(df['disciplina']==cfg['disciplina']) & (df['nível']==nivel)]
+                            else:
+                                sub_df = df[(df['disciplina']==cfg['disciplina']) & (df['assunto']==cfg['assunto']) & (df['nível']==nivel)]
+                            
+                            if not sub_df.empty:
+                                n_sorteio = min(len(sub_df), qtd)
+                                lista_final.append(sub_df.sample(n=n_sorteio))
+                    
+                    if lista_final:
+                        st.session_state.questoes = pd.concat(lista_final).sample(frac=1).reset_index(drop=True)
+                        st.session_state.prova_gerada = True
+                        st.session_state.nome, st.session_state.cod = n, c
+                        st.rerun()
+                    else: 
+                        st.error("Não há questões suficientes cadastradas para esta prova.")
+                else: 
+                    st.error("Código de prova não encontrado na nuvem.")
+            else:
+                st.warning("⚠️ Digite seu nome completo e o código da prova para iniciar.")
 
     elif st.session_state.prova_gerada and not st.session_state.entregue:
         st.subheader(f"Aluno: {st.session_state.nome} | Código: {st.session_state.cod}")
