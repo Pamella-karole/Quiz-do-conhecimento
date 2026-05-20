@@ -236,63 +236,66 @@ elif st.session_state.pagina == "professor":
         elif opcao_prof == "➕ Cadastrar Nova Questão":
             st.subheader("Formulário de Cadastro de Questão (Direto para o Supabase)")
             
-            # Criando os campos organizados dentro do bloco correto
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                nova_disc = st.text_input("Disciplina (Ex: Marketing)").strip()
-            with c2:
-                novo_assu = st.text_input("Assunto (Ex: Mix de Marketing)").strip()
-            with c3:
-                novo_niv = st.selectbox("Nível de Dificuldade", ["fácil", "médio", "difícil"])
-                
-            novo_enunciado = st.text_area("Enunciado da Questão")
-            
-            st.write("**Alternativas de Resposta:**")
-            alt_a = st.text_input("Alternativa A")
-            alt_b = st.text_input("Alternativa B")
-            alt_c = st.text_input("Alternativa C")
-            alt_d = st.text_input("Alternativa D")
-            
-            c4, c5 = st.columns(2)
-            with c4:
-                gabarito_col = st.selectbox("Qual é a alternativa correta?",
-                                            options=["alt_a", "alt_b", "alt_c", "alt_d"],
-                                            format_func=lambda x: f"Alternativa {x.split('_')[1].upper()}")
-            with c5:
-                nova_img = st.text_input("Nome da Imagem de referência (Opcional)").strip()
-                
-            nova_explicacao = st.text_area("Explicação/Feedback da Questão (Opcional)")
-
-            st.write("---")
-
-            # Botão de salvar totalmente alinhado dentro do menu do professor
-            if st.button("💾 Gravar Questão na Nuvem"):
-                if nova_disc and novo_assu and novo_enunciado and alt_a and alt_b and alt_c and alt_d:
+            # --- SUPER MELHORIA: FORMULÁRIO COM RESET COMPLETO AUTOMÁTICO ---
+            with st.form(key="form_cadastro_questao", clear_on_submit=True):
+                c1, c2, c3 = st.columns(3)
+                with c1:
+                    nova_disc = st.text_input("Disciplina (Ex: Marketing)").strip()
+                with c2:
+                    novo_assu = st.text_input("Assunto (Ex: Mix de Marketing)").strip()
+                with c3:
+                    novo_niv = st.selectbox("Nível de Dificuldade", ["fácil", "médio", "difícil"])
                     
-                    nova_questao = {
-                        'disciplina': nova_disc, 
-                        'assunto': novo_assu, 
-                        'nível': novo_niv,
-                        'enunciado': novo_enunciado, 
-                        'alt_a': alt_a, 
-                        'alt_b': alt_b, 
-                        'alt_c': alt_c, 
-                        'alt_d': alt_d,
-                        'coluna_correta': gabarito_col, 
-                        'explicacao': nova_explicacao, 
-                        'img_ref': nova_img
-                    }
+                novo_enunciado = st.text_area("Enunciado da Questão")
+                
+                st.write("**Alternativas de Resposta:**")
+                alt_a = st.text_input("Alternativa A")
+                alt_b = st.text_input("Alternativa B")
+                alt_c = st.text_input("Alternativa C")
+                alt_d = st.text_input("Alternativa D")
+                
+                c4, c5 = st.columns(2)
+                with c4:
+                    gabarito_col = st.selectbox("Qual é a alternativa correta?",
+                                                options=["alt_a", "alt_b", "alt_c", "alt_d"],
+                                                format_func=lambda x: f"Alternativa {x.split('_')[1].upper()}")
+                with c5:
+                    nova_img = st.text_input("Nome da Imagem de referência (Opcional)").strip()
                     
-                    sucesso = supabase_salvar_questao(nova_questao)
-                    if sucesso:
-                        st.success("🎉 Questão gravada com sucesso direto no banco de dados na nuvem!")
-                        import time
-                        time.sleep(1)
-                        st.rerun()
+                nova_explicacao = st.text_area("Explicação/Feedback da Questão (Opcional)")
+
+                st.write("---")
+
+                # Botão de submissão do formulário
+                botao_salvar = st.form_submit_button("💾 Gravar Questão na Nuvem")
+                
+                if botao_salvar:
+                    if nova_disc and novo_assu and novo_enunciado and alt_a and alt_b and alt_c and alt_d:
+                        
+                        nova_questao = {
+                            'disciplina': nova_disc, 
+                            'assunto': novo_assu, 
+                            'nível': novo_niv,
+                            'enunciado': novo_enunciado, 
+                            'alt_a': alt_a, 
+                            'alt_b': alt_b, 
+                            'alt_c': alt_c, 
+                            'alt_d': alt_d,
+                            'coluna_correta': gabarito_col, 
+                            'explicacao': nova_explicacao, 
+                            'img_ref': nova_img
+                        }
+                        
+                        sucesso = supabase_salvar_questao(nova_questao)
+                        if sucesso:
+                            st.success("🎉 Questão gravada com sucesso direto no banco de dados na nuvem!")
+                            import time
+                            time.sleep(1.5) # Dá tempo de ver o aviso antes do reload de limpeza
+                            st.rerun()
+                        else:
+                            st.error("Erro ao salvar. Verifique se o banco de dados está configurado corretamente.")
                     else:
-                        st.error("Erro ao salvar. Verifique se o banco de dados está configurado corretamente.")
-                else:
-                    st.error("❌ Preencha todos os campos obrigatórios (Disciplina, Assunto, Enunciado e as 4 Alternativas).")
+                        st.error("❌ Preencha todos os campos obrigatórios (Disciplina, Assunto, Enunciado e as 4 Alternativas).")
 
 # 3. ÁREA DO ALUNO (SUPABASE)
 elif st.session_state.pagina == "aluno":
@@ -305,7 +308,7 @@ elif st.session_state.pagina == "aluno":
         c = st.text_input("Código da Prova").upper()
         
         if st.button("Iniciar Prova"):
-            if n and c:  # Melhoria: impede de avançar se campos estiverem em branco
+            if n and c:
                 provas_nuvem = supabase_buscar_provas()
                 cfg = next((p for p in provas_nuvem if p['codigo_prova'] == c), None)
                 
